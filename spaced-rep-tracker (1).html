@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Retention Tracker — Spaced Repetition</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#12161d;
+    --surface:#1a212b;
+    --surface-raised:#212a36;
+    --border:#2b3542;
+    --border-soft:#232b36;
+    --text:#eef1f6;
+    --text-muted:#8d96a8;
+    --text-faint:#5b6577;
+
+    --c-physics:#e8a33d;
+    --c-ai:#5fb3b3;
+    --c-ioi:#a48cf0;
+    --c-jee:#e2685f;
+    --c-mixed:#9aa5b8;
+    --c-rest:#5fae82;
+    --c-overdue:#c15147;
+
+    --font-display:'Space Grotesk', sans-serif;
+    --font-body:'IBM Plex Sans', sans-serif;
+    --font-mono:'IBM Plex Mono', monospace;
+  }
+  *{box-sizing:border-box;}
+  @media (prefers-reduced-motion: reduce){ *{animation-duration:.001ms !important; transition-duration:.001ms !important;} }
+  body{
+    margin:0;
+    background:
+      radial-gradient(circle at 1px 1px, rgba(255,255,255,0.035) 1px, transparent 0) 0 0/28px 28px,
+      var(--bg);
+    color:var(--text);
+    font-family:var(--font-body);
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{background:rgba(232,163,61,0.28);}
+  :focus-visible{outline:2px solid var(--c-physics); outline-offset:2px; border-radius:4px;}
+  .wrap{max-width:920px; margin:0 auto; padding:0 24px 80px;}
+
+  header{padding:48px 0 8px;}
+  .eyebrow{font-family:var(--font-mono); font-size:0.72rem; letter-spacing:0.14em; text-transform:uppercase; color:var(--text-faint); margin-bottom:12px;}
+  h1{font-family:var(--font-display); font-weight:700; font-size:clamp(1.8rem,4vw,2.5rem); margin:0 0 8px; letter-spacing:-0.01em;}
+  h1 .accent{color:var(--c-physics);}
+  .subtitle{color:var(--text-muted); max-width:62ch; margin-bottom:8px;}
+
+  .stats-row{display:flex; flex-wrap:wrap; gap:10px; margin:28px 0 40px;}
+  .stat-chip{
+    background:var(--surface); border:1px solid var(--border); border-radius:8px;
+    padding:10px 14px; display:flex; align-items:center; gap:8px;
+    font-family:var(--font-mono); font-size:0.8rem;
+  }
+  .stat-chip .sw{width:8px; height:8px; border-radius:2px;}
+  .stat-chip .n{font-weight:600; color:var(--text);}
+  .stat-chip .l{color:var(--text-faint);}
+
+  section{margin-bottom:52px;}
+  .sec-head{display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:6px; flex-wrap:wrap;}
+  h2{font-family:var(--font-display); font-size:1.3rem; font-weight:600; margin:0;}
+  .sec-desc{color:var(--text-muted); font-size:0.9rem; margin-bottom:20px; max-width:65ch;}
+
+  /* Due list */
+  .due-list{display:flex; flex-direction:column; gap:10px;}
+  .due-card{
+    display:grid; grid-template-columns:4px 1fr auto; gap:16px; align-items:center;
+    background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:14px 16px;
+  }
+  .due-card .bar{align-self:stretch; border-radius:3px; min-height:36px;}
+  .due-chapter{font-family:var(--font-mono); font-size:0.7rem; letter-spacing:0.05em; text-transform:uppercase; color:var(--text-faint);}
+  .due-topic{font-weight:600; font-size:0.98rem; margin-top:2px;}
+  .due-meta{font-family:var(--font-mono); font-size:0.76rem; margin-top:4px;}
+  .due-meta.overdue{color:var(--c-overdue);}
+  .due-meta.today{color:var(--c-rest);}
+  .due-actions{display:flex; gap:8px;}
+  .btn{
+    font-family:var(--font-mono); font-size:0.76rem; letter-spacing:0.03em; text-transform:uppercase;
+    padding:9px 13px; border-radius:6px; border:1px solid var(--border); background:var(--surface-raised);
+    color:var(--text-muted); cursor:pointer; transition:all .15s ease;
+  }
+  .btn:hover{color:var(--text); border-color:var(--text-faint);}
+  .btn.pass{border-color:var(--c-rest); color:var(--c-rest);}
+  .btn.pass:hover{background:rgba(95,174,130,0.12);}
+  .btn.fail{border-color:var(--c-overdue); color:var(--c-overdue);}
+  .btn.fail:hover{background:rgba(193,81,71,0.12);}
+  .btn.primary{background:var(--c-physics); border-color:var(--c-physics); color:#1a1305; font-weight:600;}
+  .btn.primary:hover{opacity:0.9;}
+  .btn.ghost{background:transparent;}
+
+  .empty-note{
+    color:var(--text-faint); font-size:0.88rem; padding:20px; text-align:center;
+    border:1px dashed var(--border); border-radius:10px;
+  }
+
+  /* Add form */
+  .add-form{
+    background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:22px;
+    display:grid; grid-template-columns:1fr 1fr; gap:14px;
+  }
+  @media (max-width:600px){ .add-form{grid-template-columns:1fr;} }
+  .field{display:flex; flex-direction:column; gap:6px;}
+  .field.full{grid-column:1 / -1;}
+  .field label{font-family:var(--font-mono); font-size:0.68rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-faint);}
+  .field select, .field input{
+    background:var(--surface-raised); border:1px solid var(--border); color:var(--text);
+    border-radius:7px; padding:10px 12px; font-family:var(--font-body); font-size:0.92rem;
+  }
+  .field select:focus, .field input:focus{border-color:var(--c-physics);}
+  .add-form .field.full{display:grid; grid-template-columns:1fr auto; gap:10px; align-items:end;}
+
+  /* Filter tabs */
+  .filter-tabs{display:flex; gap:6px; margin-bottom:18px; flex-wrap:wrap;}
+  .ft-btn{
+    font-family:var(--font-mono); font-size:0.74rem; text-transform:uppercase; letter-spacing:0.03em;
+    background:var(--surface); border:1px solid var(--border); color:var(--text-muted);
+    padding:7px 12px; border-radius:6px; cursor:pointer;
+  }
+  .ft-btn.active{border-color:var(--c-physics); color:var(--c-physics);}
+
+  /* Subject groups */
+  .subject-group{margin-bottom:26px;}
+  .subject-head{display:flex; align-items:center; gap:8px; margin-bottom:10px;}
+  .subject-head .sw{width:9px; height:9px; border-radius:2px;}
+  .subject-head .name{font-family:var(--font-mono); font-size:0.78rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted);}
+
+  .chapter-block{margin-bottom:14px;}
+  .chapter-name{font-size:0.85rem; color:var(--text-faint); margin-bottom:6px; padding-left:2px;}
+
+  .topic-row{
+    display:grid; grid-template-columns:1fr auto auto auto; gap:12px; align-items:center;
+    padding:10px 12px; border-radius:8px; border:1px solid var(--border-soft);
+    margin-bottom:6px; background:var(--surface);
+  }
+  @media (max-width:640px){ .topic-row{grid-template-columns:1fr; gap:6px;} }
+  .topic-name{font-size:0.92rem;}
+  .topic-status{font-family:var(--font-mono); font-size:0.74rem; color:var(--text-muted);}
+  .topic-status.overdue{color:var(--c-overdue);}
+  .stage-dots{display:flex; gap:4px;}
+  .stage-dot{width:7px; height:7px; border-radius:50%; background:var(--border);}
+  .stage-dot.filled{background:var(--c-physics);}
+  .stage-dot.mastered-dot{background:var(--c-rest);}
+  .del-btn{
+    background:none; border:none; color:var(--text-faint); cursor:pointer; font-size:1rem;
+    padding:2px 6px; line-height:1;
+  }
+  .del-btn:hover{color:var(--c-overdue);}
+
+  .toast{
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+    background:var(--surface-raised); border:1px solid var(--border); color:var(--text);
+    padding:12px 18px; border-radius:8px; font-size:0.88rem; z-index:50;
+    box-shadow:0 8px 24px rgba(0,0,0,0.4);
+  }
+  .toast.error{border-color:var(--c-overdue); color:var(--c-overdue);}
+
+  footer{border-top:1px solid var(--border-soft); padding-top:24px; color:var(--text-faint); font-size:0.8rem;}
+  footer button{
+    background:var(--surface); border:1px solid var(--border); color:var(--text-muted);
+    font-family:var(--font-mono); font-size:0.74rem; text-transform:uppercase; letter-spacing:0.03em;
+    padding:8px 12px; border-radius:6px; cursor:pointer;
+  }
+  footer button:hover{color:var(--text); border-color:var(--text-faint);}
+  #clearAllBtn:hover{color:var(--c-overdue); border-color:var(--c-overdue);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Retention engine · companion to the 70-day plan</div>
+    <h1>Spaced Repetition <span class="accent">Tracker</span></h1>
+    <p class="subtitle">Log a topic once, the day you learn it. It comes back at +1, +3, +7, +16, +35 days. Pass pushes it forward, fail resets it to +1 — that's the whole system.</p>
+  </header>
+
+  <div class="stats-row" id="statsRow"></div>
+
+  <section id="dueSection">
+    <div class="sec-head"><h2>Due today</h2></div>
+    <p class="sec-desc">Sorted worst-overdue first. Clear this before adding new topics if it's stacking up.</p>
+    <div class="due-list" id="dueList"><div class="empty-note">Loading…</div></div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>Log a new topic</h2></div>
+    <p class="sec-desc">One row per reviewable concept — not the whole chapter. "Rotational Motion" as a chapter, "moment of inertia derivation" as the topic.</p>
+    <form class="add-form" id="addForm">
+      <div class="field">
+        <label for="fSubject">Subject</label>
+        <select id="fSubject">
+          <option value="physics">Physics / IPhO</option>
+          <option value="ai">AI Olympiad</option>
+          <option value="ioi">IOI</option>
+          <option value="jee">JEE Chem + Math</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="fDate">Date learned</label>
+        <input type="date" id="fDate">
+      </div>
+      <div class="field">
+        <label for="fChapter">Chapter</label>
+        <input type="text" id="fChapter" list="chapterOptions" placeholder="e.g. Rotational Motion" autocomplete="off">
+        <datalist id="chapterOptions"></datalist>
+      </div>
+      <div class="field">
+        <label for="fTopic">Specific topic / concept</label>
+        <input type="text" id="fTopic" placeholder="e.g. Moment of inertia derivation" autocomplete="off">
+      </div>
+      <div class="field full">
+        <div></div>
+        <button type="submit" class="btn primary">Add topic — schedule first review for +1 day</button>
+      </div>
+    </form>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>All topics</h2></div>
+    <p class="sec-desc">Grouped by subject, then chapter. Mastered topics (all 5 intervals passed) sit at the bottom of each subject.</p>
+    <div class="filter-tabs" id="filterTabs"></div>
+    <div id="allTopics"><div class="empty-note">Loading…</div></div>
+  </section>
+
+  <footer>
+    Data saves to this browser only (<code>localStorage</code>) — it won't sync across devices, and won't persist at all if you're viewing this inside Claude's chat preview instead of as its own open page.
+    <div style="margin-top:10px; display:flex; gap:14px; flex-wrap:wrap;">
+      <button id="exportBtn">Export data (.json)</button>
+      <button id="importBtn">Import data (.json)</button>
+      <input type="file" id="importInput" accept="application/json" style="display:none;">
+      <button id="clearAllBtn">Clear all tracker data</button>
+    </div>
+  </footer>
+</div>
+
+<script>
+const INTERVALS = [1,3,7,16,35];
+const STORAGE_KEY = 'srs-topics';
+
+const SUBJECTS = {
+  physics: {label:'Physics / IPhO', color:'var(--c-physics)'},
+  ai:      {label:'AI Olympiad',    color:'var(--c-ai)'},
+  ioi:     {label:'IOI',            color:'var(--c-ioi)'},
+  jee:     {label:'JEE Chem + Math',color:'var(--c-jee)'}
+};
+
+const CHAPTER_SUGGESTIONS = {
+  physics: ['Units & Measurements','Motion in a Straight Line','Motion in a Plane','Laws of Motion','Work, Energy & Power','Rotational Motion','Gravitation','Mechanical Properties of Solids','Mechanical Properties of Fluids','Thermal Properties of Matter','Thermodynamics','Kinetic Theory of Gases','Oscillations & Waves','Electrostatics','Magnetism / EMI / AC','Optics','Dual Nature of Radiation & Matter','Atoms & Nuclei','Electronic Devices'],
+  ai: ['Python / NumPy / Pandas','Matplotlib / Seaborn','Foundational Math','Supervised Learning','Unsupervised Learning','Neural Network Fundamentals','Computer Vision','NLP','Gen AI Tool Use'],
+  ioi: ['C++ Basics','STL Containers','Introductory Problems','Sorting & Searching','Dynamic Programming','Graph Algorithms','Range Queries','Tree Algorithms','Geometry','Advanced Techniques'],
+  jee: ['Physical Chemistry','Organic Chemistry','Inorganic Chemistry','Algebra','Calculus','Coordinate Geometry','Trigonometry']
+};
+
+let topics = [];
+let loaded = false;
+let activeFilter = 'all';
+
+/* ---------- date helpers (Asia/Kolkata) ---------- */
+function getTodayISO(){
+  const fmt = new Intl.DateTimeFormat('en-CA', {timeZone:'Asia/Kolkata', year:'numeric', month:'2-digit', day:'2-digit'});
+  const parts = {};
+  fmt.formatToParts(new Date()).forEach(p => parts[p.type] = p.value);
+  return `${parts.year}-${parts.month}-${parts.day}`;
+}
+function addDays(iso, n){
+  const d = new Date(iso + 'T00:00:00Z');
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0,10);
+}
+function daysBetween(a,b){
+  return Math.round((new Date(b+'T00:00:00Z') - new Date(a+'T00:00:00Z')) / 86400000);
+}
+function fmtDate(iso){
+  return new Date(iso+'T00:00:00Z').toLocaleDateString('en-US',{month:'short', day:'numeric', timeZone:'UTC'});
+}
+
+/* ---------- storage (plain localStorage — this runs as a standalone file, not a live Claude.ai artifact) ---------- */
+function loadTopics(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    topics = raw ? JSON.parse(raw) : [];
+  } catch(e){
+    topics = [];
+    showToast('Couldn\'t read saved data — starting fresh', true);
+  }
+  loaded = true;
+}
+function persist(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(topics));
+  } catch(e){
+    showToast('Save failed — your browser may be blocking local storage', true);
+  }
+}
+function showToast(msg, isError){
+  const t = document.createElement('div');
+  t.className = 'toast' + (isError ? ' error' : '');
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(), 2600);
+}
+
+/* ---------- topic logic ---------- */
+function addTopic(subject, chapter, name, dateLearned){
+  const id = 't_' + Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+  topics.push({
+    id, subject, chapter: chapter.trim(), name: name.trim(),
+    dateAdded: dateLearned,
+    intervalIndex: 0,
+    nextReview: addDays(dateLearned, INTERVALS[0]),
+    status: 'active',
+    history: []
+  });
+}
+function markResult(id, passed){
+  const topic = topics.find(t => t.id === id);
+  if(!topic) return;
+  const today = getTodayISO();
+  topic.history.push({date: today, result: passed ? 'pass' : 'fail'});
+  if(passed){
+    topic.intervalIndex++;
+    if(topic.intervalIndex >= INTERVALS.length){
+      topic.status = 'mastered';
+      topic.nextReview = null;
+    } else {
+      topic.nextReview = addDays(today, INTERVALS[topic.intervalIndex]);
+    }
+  } else {
+    topic.intervalIndex = 0;
+    topic.status = 'active';
+    topic.nextReview = addDays(today, INTERVALS[0]);
+  }
+  persist();
+  renderAll();
+}
+function reviveTopic(id){
+  const topic = topics.find(t => t.id === id);
+  if(!topic) return;
+  topic.status = 'active';
+  topic.intervalIndex = 0;
+  topic.nextReview = addDays(getTodayISO(), INTERVALS[0]);
+  persist();
+  renderAll();
+}
+function deleteTopic(id){
+  topics = topics.filter(t => t.id !== id);
+  persist();
+  renderAll();
+}
+
+/* ---------- render ---------- */
+function renderStats(){
+  const today = getTodayISO();
+  const el = document.getElementById('statsRow');
+  const chips = [];
+  const dueCount = topics.filter(t => t.status === 'active' && t.nextReview <= today).length;
+  chips.push(`<div class="stat-chip"><span class="sw" style="background:var(--c-overdue)"></span><span class="n">${dueCount}</span><span class="l">due now</span></div>`);
+  Object.keys(SUBJECTS).forEach(key => {
+    const s = SUBJECTS[key];
+    const active = topics.filter(t => t.subject === key && t.status === 'active').length;
+    const mastered = topics.filter(t => t.subject === key && t.status === 'mastered').length;
+    chips.push(`<div class="stat-chip"><span class="sw" style="background:${s.color}"></span><span class="n">${active}</span><span class="l">${s.label} · ${mastered} mastered</span></div>`);
+  });
+  el.innerHTML = chips.join('');
+}
+
+function renderDue(){
+  const today = getTodayISO();
+  const el = document.getElementById('dueList');
+  const due = topics
+    .filter(t => t.status === 'active' && t.nextReview <= today)
+    .sort((a,b) => a.nextReview.localeCompare(b.nextReview));
+
+  if(!loaded){ el.innerHTML = '<div class="empty-note">Loading…</div>'; return; }
+  if(due.length === 0){
+    el.innerHTML = '<div class="empty-note">Nothing due right now. Add topics as you learn them and they\'ll show up here on schedule.</div>';
+    return;
+  }
+  el.innerHTML = due.map(t => {
+    const s = SUBJECTS[t.subject];
+    const overdueDays = daysBetween(t.nextReview, today);
+    const metaClass = overdueDays > 0 ? 'overdue' : 'today';
+    const metaText = overdueDays > 0 ? `${overdueDays} day${overdueDays>1?'s':''} overdue` : 'Due today';
+    return `
+      <div class="due-card">
+        <div class="bar" style="background:${s.color}"></div>
+        <div>
+          <div class="due-chapter">${s.label} · ${escapeHtml(t.chapter)}</div>
+          <div class="due-topic">${escapeHtml(t.name)}</div>
+          <div class="due-meta ${metaClass}">${metaText} · stage ${t.intervalIndex+1}/${INTERVALS.length}</div>
+        </div>
+        <div class="due-actions">
+          <button class="btn fail" onclick="markResult('${t.id}', false)">Struggled</button>
+          <button class="btn pass" onclick="markResult('${t.id}', true)">Got it</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function renderFilterTabs(){
+  const el = document.getElementById('filterTabs');
+  const tabs = [{key:'all', label:'All'}, ...Object.keys(SUBJECTS).map(k => ({key:k, label:SUBJECTS[k].label}))];
+  el.innerHTML = tabs.map(t => `<button class="ft-btn ${activeFilter===t.key?'active':''}" data-filter="${t.key}">${t.label}</button>`).join('');
+  el.querySelectorAll('.ft-btn').forEach(btn => {
+    btn.addEventListener('click', () => { activeFilter = btn.dataset.filter; renderAllTopics(); renderFilterTabs(); });
+  });
+}
+
+function stageDots(topic){
+  let dots = '';
+  for(let i=0;i<INTERVALS.length;i++){
+    const filled = topic.status === 'mastered' || i < topic.intervalIndex || (i === topic.intervalIndex && topic.status==='active');
+    const cls = topic.status === 'mastered' ? 'filled mastered-dot' : (i <= topic.intervalIndex ? 'filled' : '');
+    dots += `<span class="stage-dot ${i <= topic.intervalIndex || topic.status==='mastered' ? (topic.status==='mastered'?'mastered-dot filled':'filled') : ''}"></span>`;
+  }
+  return `<div class="stage-dots">${dots}</div>`;
+}
+
+function renderAllTopics(){
+  const el = document.getElementById('allTopics');
+  if(!loaded){ el.innerHTML = '<div class="empty-note">Loading…</div>'; return; }
+  if(topics.length === 0){
+    el.innerHTML = '<div class="empty-note">No topics logged yet — add your first one above.</div>';
+    return;
+  }
+
+  const today = getTodayISO();
+  const subjectKeys = activeFilter === 'all' ? Object.keys(SUBJECTS) : [activeFilter];
+  let html = '';
+
+  subjectKeys.forEach(subjKey => {
+    const subjTopics = topics.filter(t => t.subject === subjKey);
+    if(subjTopics.length === 0) return;
+    const s = SUBJECTS[subjKey];
+
+    const chapters = {};
+    subjTopics.forEach(t => { (chapters[t.chapter] = chapters[t.chapter] || []).push(t); });
+
+    let chapterHtml = '';
+    Object.keys(chapters).sort().forEach(ch => {
+      const rows = chapters[ch]
+        .sort((a,b) => (a.status==='mastered')-(b.status==='mastered') || (a.nextReview||'').localeCompare(b.nextReview||''))
+        .map(t => {
+          let statusText, statusClass = '';
+          if(t.status === 'mastered'){
+            statusText = 'Mastered';
+          } else {
+            const overdueDays = daysBetween(t.nextReview, today);
+            if(overdueDays > 0){ statusText = `${overdueDays}d overdue`; statusClass = 'overdue'; }
+            else if(overdueDays === 0){ statusText = 'Due today'; statusClass = 'overdue'; }
+            else { statusText = `Due in ${-overdueDays}d`; }
+          }
+          return `
+            <div class="topic-row">
+              <div class="topic-name">${escapeHtml(t.name)}</div>
+              ${stageDots(t)}
+              <div class="topic-status ${statusClass}">${statusText}</div>
+              <div style="display:flex; gap:6px;">
+                ${t.status==='mastered' ? `<button class="btn ghost" onclick="reviveTopic('${t.id}')">Review again</button>` : ''}
+                <button class="del-btn" onclick="deleteTopic('${t.id}')" aria-label="Delete topic" title="Delete">×</button>
+              </div>
+            </div>`;
+        }).join('');
+      chapterHtml += `<div class="chapter-block"><div class="chapter-name">${escapeHtml(ch)}</div>${rows}</div>`;
+    });
+
+    html += `
+      <div class="subject-group">
+        <div class="subject-head"><span class="sw" style="background:${s.color}"></span><span class="name">${s.label}</span></div>
+        ${chapterHtml}
+      </div>`;
+  });
+
+  el.innerHTML = html || '<div class="empty-note">Nothing in this subject yet.</div>';
+}
+
+function updateChapterOptions(){
+  const subject = document.getElementById('fSubject').value;
+  const used = [...new Set(topics.filter(t=>t.subject===subject).map(t=>t.chapter))];
+  const suggestions = [...new Set([...(CHAPTER_SUGGESTIONS[subject]||[]), ...used])];
+  document.getElementById('chapterOptions').innerHTML = suggestions.map(c => `<option value="${escapeHtml(c)}">`).join('');
+}
+
+function escapeHtml(str){
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+function renderAll(){
+  renderStats();
+  renderDue();
+  renderAllTopics();
+}
+
+/* ---------- form ---------- */
+document.getElementById('fSubject').addEventListener('change', updateChapterOptions);
+document.getElementById('addForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const subject = document.getElementById('fSubject').value;
+  const date = document.getElementById('fDate').value || getTodayISO();
+  const chapter = document.getElementById('fChapter').value.trim();
+  const name = document.getElementById('fTopic').value.trim();
+  if(!chapter || !name){ showToast('Add a chapter and a topic name', true); return; }
+  addTopic(subject, chapter, name, date);
+  persist();
+  document.getElementById('fTopic').value = '';
+  document.getElementById('fTopic').focus();
+  updateChapterOptions();
+  renderAll();
+  showToast('Added — first review in 1 day');
+});
+
+document.getElementById('clearAllBtn').addEventListener('click', () => {
+  if(confirm('Clear all tracker data? This cannot be undone.')){
+    topics = [];
+    persist();
+    renderAll();
+  }
+});
+
+document.getElementById('exportBtn').addEventListener('click', () => {
+  if(topics.length === 0){ showToast('Nothing to export yet', true); return; }
+  const blob = new Blob([JSON.stringify(topics, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'srs-tracker-backup-' + getTodayISO() + '.json';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  showToast('Exported ' + topics.length + ' topics');
+});
+
+document.getElementById('importBtn').addEventListener('click', () => {
+  document.getElementById('importInput').click();
+});
+
+document.getElementById('importInput').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try{
+      const parsed = JSON.parse(ev.target.result);
+      if(!Array.isArray(parsed)) throw new Error('bad format');
+      const replace = topics.length === 0 || confirm(`Import ${parsed.length} topics? OK replaces everything currently saved here, Cancel merges instead.`);
+      if(replace){
+        topics = parsed;
+      } else {
+        const existingIds = new Set(topics.map(t => t.id));
+        parsed.forEach(t => { if(!existingIds.has(t.id)) topics.push(t); });
+      }
+      persist();
+      updateChapterOptions();
+      renderAll();
+      showToast('Imported ' + parsed.length + ' topics');
+    } catch(err){
+      showToast('Could not read that file — is it a tracker export?', true);
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
+/* ---------- init ---------- */
+function init(){
+  document.getElementById('fDate').value = getTodayISO();
+  renderFilterTabs();
+  updateChapterOptions();
+  loadTopics();
+  renderAll();
+}
+init();
+</script>
+</body>
+</html>

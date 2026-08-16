@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>70-Day Log — JEE · IPhO · IOAI · IOI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#12161d;
+    --surface:#1a212b;
+    --surface-raised:#212a36;
+    --border:#2b3542;
+    --border-soft:#232b36;
+    --text:#eef1f6;
+    --text-muted:#8d96a8;
+    --text-faint:#5b6577;
+
+    --c-physics:#e8a33d;
+    --c-ai:#5fb3b3;
+    --c-ioi:#a48cf0;
+    --c-jee:#e2685f;
+    --c-mixed:#9aa5b8;
+
+    --c-school:#7c8798;
+    --c-leave:#c98a2e;
+    --c-sunday:#5f8fc2;
+    --c-rest:#5fae82;
+    --c-blackout:#c15147;
+
+    --font-display:'Space Grotesk', sans-serif;
+    --font-body:'IBM Plex Sans', sans-serif;
+    --font-mono:'IBM Plex Mono', monospace;
+
+    --radius:10px;
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+    *{animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important;}
+  }
+
+  body{
+    margin:0;
+    background:
+      radial-gradient(circle at 1px 1px, rgba(255,255,255,0.035) 1px, transparent 0) 0 0/28px 28px,
+      var(--bg);
+    color:var(--text);
+    font-family:var(--font-body);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  a{color:inherit;}
+  ::selection{background:rgba(232,163,61,0.28); color:var(--text);}
+
+  :focus-visible{
+    outline:2px solid var(--c-physics);
+    outline-offset:3px;
+    border-radius:4px;
+  }
+
+  .wrap{max-width:1080px; margin:0 auto; padding:0 24px;}
+
+  /* ---------- Header ---------- */
+  header.top{padding:56px 0 28px;}
+  .eyebrow{
+    font-family:var(--font-mono);
+    font-size:0.72rem;
+    letter-spacing:0.16em;
+    text-transform:uppercase;
+    color:var(--text-faint);
+    margin-bottom:14px;
+  }
+  h1.title{
+    font-family:var(--font-display);
+    font-weight:700;
+    font-size:clamp(2rem, 4.6vw, 3rem);
+    letter-spacing:-0.01em;
+    margin:0 0 10px;
+  }
+  h1.title .accent{color:var(--c-physics);}
+  .subtitle{color:var(--text-muted); font-size:1rem; max-width:56ch;}
+
+  /* ---------- Today panel (signature element) ---------- */
+  .today-panel{
+    margin-top:32px;
+    background:linear-gradient(180deg, var(--surface-raised), var(--surface));
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:28px;
+    position:relative;
+    overflow:hidden;
+  }
+  .today-panel::before{
+    content:"";
+    position:absolute; inset:0;
+    background:
+      linear-gradient(90deg, rgba(232,163,61,0.06), transparent 40%);
+    pointer-events:none;
+  }
+  .today-grid{
+    display:grid;
+    grid-template-columns:auto 1fr;
+    gap:32px;
+    align-items:start;
+  }
+  @media (max-width:680px){ .today-grid{grid-template-columns:1fr;} }
+
+  .day-readout{
+    display:flex; flex-direction:column; gap:4px;
+  }
+  .day-readout .label{
+    font-family:var(--font-mono);
+    font-size:0.7rem;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--text-faint);
+  }
+  .day-readout .big{
+    font-family:var(--font-mono);
+    font-weight:600;
+    font-size:clamp(2.6rem, 8vw, 3.6rem);
+    line-height:1;
+    color:var(--text);
+    white-space:nowrap;
+  }
+  .day-readout .big span.of{color:var(--text-faint); font-size:0.42em; font-weight:400;}
+  .day-readout .date-line{
+    font-family:var(--font-mono);
+    font-size:0.85rem;
+    color:var(--text-muted);
+    margin-top:6px;
+  }
+
+  .type-pill{
+    display:inline-flex; align-items:center; gap:6px;
+    font-family:var(--font-mono); font-size:0.72rem; letter-spacing:0.06em; text-transform:uppercase;
+    padding:5px 10px; border-radius:6px; margin-top:10px;
+    border:1px solid var(--border);
+    width:max-content;
+  }
+  .type-pill .dot{width:7px; height:7px; border-radius:50%;}
+
+  .now-block{display:flex; flex-direction:column; gap:18px;}
+  .now-row{display:flex; align-items:flex-start; gap:12px;}
+  .rec-dot{
+    width:10px; height:10px; border-radius:50%;
+    background:var(--c-physics);
+    margin-top:6px; flex-shrink:0;
+    box-shadow:0 0 0 0 rgba(232,163,61,0.5);
+    animation:pulse 2.2s infinite;
+  }
+  @keyframes pulse{
+    0%{box-shadow:0 0 0 0 rgba(232,163,61,0.45);}
+    70%{box-shadow:0 0 0 9px rgba(232,163,61,0);}
+    100%{box-shadow:0 0 0 0 rgba(232,163,61,0);}
+  }
+  .now-label{font-family:var(--font-mono); font-size:0.7rem; letter-spacing:0.14em; text-transform:uppercase; color:var(--text-faint); margin-bottom:4px;}
+  .now-title{font-size:1.15rem; font-weight:600;}
+  .now-meta{font-family:var(--font-mono); font-size:0.82rem; color:var(--text-muted); margin-top:4px;}
+  .now-empty{color:var(--text-muted); font-size:0.95rem;}
+
+  .track-chip{
+    display:inline-flex; align-items:center; gap:6px;
+    font-family:var(--font-mono); font-size:0.72rem; text-transform:uppercase; letter-spacing:0.05em;
+    color:var(--text-muted);
+  }
+  .track-chip .sw{width:8px; height:8px; border-radius:2px;}
+
+  .progress-track{
+    margin-top:24px;
+    height:6px; border-radius:4px; background:var(--border-soft); overflow:hidden;
+  }
+  .progress-fill{height:100%; background:linear-gradient(90deg, var(--c-physics), #f2c069);}
+  .progress-caption{font-family:var(--font-mono); font-size:0.72rem; color:var(--text-faint); margin-top:8px;}
+
+  /* ---------- Nav ---------- */
+  nav.segnav{
+    position:sticky; top:0; z-index:20;
+    background:rgba(18,22,29,0.88);
+    backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--border);
+    margin-top:36px;
+  }
+  .segnav .wrap{display:flex; gap:4px; overflow-x:auto; padding-top:0; padding-bottom:0;}
+  .segnav a{
+    font-family:var(--font-mono);
+    font-size:0.78rem;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    text-decoration:none;
+    color:var(--text-muted);
+    padding:16px 14px;
+    white-space:nowrap;
+    border-bottom:2px solid transparent;
+    transition:color .15s ease, border-color .15s ease;
+  }
+  .segnav a:hover{color:var(--text);}
+  .segnav a.active{color:var(--c-physics); border-color:var(--c-physics);}
+
+  /* ---------- Sections ---------- */
+  section{padding:56px 0 8px;}
+  section:first-of-type{padding-top:48px;}
+  .sec-head{margin-bottom:8px;}
+  .sec-eyebrow{font-family:var(--font-mono); font-size:0.72rem; letter-spacing:0.14em; text-transform:uppercase; color:var(--text-faint);}
+  h2.sec-title{font-family:var(--font-display); font-size:clamp(1.4rem,2.6vw,1.8rem); font-weight:600; margin:6px 0 10px;}
+  .sec-desc{color:var(--text-muted); max-width:70ch; margin-bottom:28px;}
+
+  /* legend */
+  .legend{display:flex; flex-wrap:wrap; gap:16px; margin-bottom:28px;}
+
+  /* Templates */
+  .template-tabs{display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap;}
+  .tt-btn{
+    font-family:var(--font-mono); font-size:0.78rem; letter-spacing:0.03em; text-transform:uppercase;
+    background:var(--surface); border:1px solid var(--border); color:var(--text-muted);
+    padding:9px 14px; border-radius:7px; cursor:pointer; transition:all .15s ease;
+  }
+  .tt-btn:hover{color:var(--text); border-color:var(--text-faint);}
+  .tt-btn.active{background:var(--surface-raised); color:var(--c-physics); border-color:var(--c-physics);}
+
+  .template-panel{display:none;}
+  .template-panel.active{display:block;}
+  .template-note{color:var(--text-muted); font-size:0.9rem; margin-bottom:18px; border-left:2px solid var(--border); padding-left:12px;}
+
+  .block-row{
+    display:grid;
+    grid-template-columns:96px 4px 1fr;
+    gap:16px;
+    padding:14px 0;
+    border-bottom:1px solid var(--border-soft);
+    align-items:start;
+  }
+  .block-row:last-child{border-bottom:none;}
+  .block-time{font-family:var(--font-mono); font-size:0.82rem; color:var(--text-muted); padding-top:2px;}
+  .block-bar{border-radius:3px; align-self:stretch; min-height:32px;}
+  .block-title{font-weight:600; font-size:0.98rem;}
+  .block-tags{display:flex; gap:10px; margin-top:5px; flex-wrap:wrap;}
+  .block-tag{font-family:var(--font-mono); font-size:0.7rem; letter-spacing:0.05em; text-transform:uppercase; color:var(--text-faint);}
+
+  .rest-card{
+    background:var(--surface); border:1px dashed var(--border); border-radius:10px;
+    padding:24px; color:var(--text-muted); text-align:center; font-size:0.95rem;
+  }
+
+  /* Week map */
+  .week-grid{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+  @media (max-width:760px){ .week-grid{grid-template-columns:1fr;} }
+
+  .week-card{
+    background:var(--surface); border:1px solid var(--border); border-radius:10px;
+    padding:18px 20px; cursor:pointer;
+  }
+  .week-card.current-week{border-color:var(--c-physics); box-shadow:0 0 0 1px rgba(232,163,61,0.25);}
+  .week-card-head{display:flex; justify-content:space-between; align-items:flex-start; gap:12px;}
+  .week-num{font-family:var(--font-mono); font-size:0.8rem; color:var(--text-faint); letter-spacing:0.05em;}
+  .week-dates{font-family:var(--font-mono); font-size:0.8rem; color:var(--text-muted); margin-top:2px;}
+  .week-toggle{font-family:var(--font-mono); color:var(--text-faint); font-size:1rem; user-select:none;}
+
+  .day-strip{display:flex; gap:3px; margin:12px 0;}
+  .day-sq{width:16px; height:16px; border-radius:3px; flex-shrink:0;}
+
+  .week-headline{font-weight:600; font-size:0.95rem; margin-top:4px;}
+  .week-body{display:none; margin-top:16px; border-top:1px solid var(--border-soft); padding-top:14px;}
+  .week-card.open .week-body{display:block;}
+  .week-card.open .week-toggle{transform:rotate(45deg);}
+
+  .track-row{display:grid; grid-template-columns:16px 1fr; gap:10px; margin-bottom:10px; align-items:start;}
+  .track-row .sw{width:9px; height:9px; border-radius:2px; margin-top:6px;}
+  .track-row .tname{font-family:var(--font-mono); font-size:0.68rem; letter-spacing:0.05em; text-transform:uppercase; color:var(--text-faint);}
+  .track-row .tval{font-size:0.92rem; color:var(--text);}
+
+  .week-note{
+    margin-top:12px; padding-top:12px; border-top:1px solid var(--border-soft);
+    font-size:0.88rem; color:var(--text-muted); font-style:italic;
+  }
+
+  /* Spaced repetition timeline */
+  .sr-timeline{display:flex; gap:0; margin:24px 0 8px; overflow-x:auto; padding-bottom:8px;}
+  .sr-node{flex:1; min-width:120px; position:relative; padding:0 14px 0 0;}
+  .sr-node::after{
+    content:""; position:absolute; top:5px; right:0; width:100%; height:1px; background:var(--border);
+  }
+  .sr-node:last-child::after{display:none;}
+  .sr-dot{width:11px; height:11px; border-radius:50%; background:var(--c-physics); margin-bottom:12px; position:relative; z-index:1;}
+  .sr-day{font-family:var(--font-mono); font-weight:600; font-size:0.95rem;}
+  .sr-label{color:var(--text-muted); font-size:0.82rem; margin-top:4px;}
+
+  /* Risks */
+  .risk-list{display:flex; flex-direction:column; gap:0;}
+  .risk-item{
+    display:grid; grid-template-columns:180px 1fr; gap:20px;
+    padding:18px 0; border-bottom:1px solid var(--border-soft);
+  }
+  @media (max-width:640px){ .risk-item{grid-template-columns:1fr; gap:6px;} }
+  .risk-item:last-child{border-bottom:none;}
+  .risk-tag{font-family:var(--font-mono); font-size:0.75rem; letter-spacing:0.04em; text-transform:uppercase; color:var(--c-jee);}
+  .risk-body{color:var(--text-muted); font-size:0.94rem;}
+  .risk-body strong{color:var(--text); font-weight:600;}
+
+  footer{
+    margin-top:64px; padding:32px 0 56px; border-top:1px solid var(--border-soft);
+    color:var(--text-faint); font-size:0.82rem;
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <div class="eyebrow">Training log · Aug 15 – Oct 23, 2026</div>
+    <h1 class="title">JEE <span class="accent">·</span> IPhO <span class="accent">·</span> IOAI <span class="accent">·</span> IOI</h1>
+    <p class="subtitle">Four tracks, one 70-day window. This page reads the calendar live — open it any morning and it tells you exactly which block you're supposed to be in.</p>
+  </header>
+
+  <div class="today-panel" id="todayPanel"><!-- rendered by JS --></div>
+</div>
+
+<nav class="segnav">
+  <div class="wrap">
+    <a href="#templates" class="nav-link">Daily templates</a>
+    <a href="#weeks" class="nav-link">Week map</a>
+    <a href="#spaced" class="nav-link">Spaced repetition</a>
+    <a href="#risks" class="nav-link">Risks &amp; notes</a>
+  </div>
+</nav>
+
+<div class="wrap">
+
+  <section id="templates">
+    <div class="sec-head">
+      <div class="sec-eyebrow">01 — Structure</div>
+      <h2 class="sec-title">Daily templates</h2>
+    </div>
+    <p class="sec-desc">Three shapes of day. The week map below just tells you which topic fills the "new content" slots — the skeleton stays the same.</p>
+
+    <div class="legend" id="legend"><!-- rendered by JS --></div>
+
+    <div class="template-tabs" id="templateTabs"><!-- rendered by JS --></div>
+    <div id="templatePanels"><!-- rendered by JS --></div>
+  </section>
+
+  <section id="weeks">
+    <div class="sec-head">
+      <div class="sec-eyebrow">02 — Ten weeks</div>
+      <h2 class="sec-title">Week-by-week map</h2>
+    </div>
+    <p class="sec-desc">Click a week to expand it. The strip of squares shows the day-type mix for that week — hover a square for the date.</p>
+    <div class="week-grid" id="weekGrid"><!-- rendered by JS --></div>
+  </section>
+
+  <section id="spaced">
+    <div class="sec-head">
+      <div class="sec-eyebrow">03 — Retention engine</div>
+      <h2 class="sec-title">Spaced repetition intervals</h2>
+    </div>
+    <p class="sec-desc">The card comes back, not the whole topic. This is what lets Week 2 material survive to Week 6 without a full re-study.</p>
+    <div class="sr-timeline">
+      <div class="sr-node"><div class="sr-dot"></div><div class="sr-day">Day +1</div><div class="sr-label">Every morning / leave-day active recall block</div></div>
+      <div class="sr-node"><div class="sr-dot"></div><div class="sr-day">Day +3</div><div class="sr-label">Evening spaced-rep drill</div></div>
+      <div class="sr-node"><div class="sr-dot"></div><div class="sr-day">Day +7</div><div class="sr-label">Sunday mega-review</div></div>
+      <div class="sr-node"><div class="sr-dot"></div><div class="sr-day">Day +16</div><div class="sr-label">Evening spaced-rep drill, mixed tracks</div></div>
+      <div class="sr-node"><div class="sr-dot"></div><div class="sr-day">Day +35</div><div class="sr-label">Leave-day long-horizon review, rotating backlog</div></div>
+    </div>
+    <p class="sec-desc" style="margin-top:20px;">If a card keeps failing on return, that's a signal for a fresh Feynman explanation — not another round of drilling.</p>
+  </section>
+
+  <section id="risks">
+    <div class="sec-head">
+      <div class="sec-eyebrow">04 — Known weak points</div>
+      <h2 class="sec-title">Risks &amp; notes</h2>
+    </div>
+    <div class="risk-list" id="riskList"><!-- rendered by JS --></div>
+  </section>
+
+  <footer>
+    Built from your IOAI, IOI, and IPhO/JEE resource docs. Dates run on Asia/Kolkata time — reopen this any day between Aug 15 and Oct 23, 2026 and the top panel updates itself.
+  </footer>
+</div>
+
+<script>
+/* ============ DATA ============ */
+
+const START = '2026-08-15';
+const END   = '2026-10-23';
+
+const REST_DATES = ['2026-08-28','2026-09-12','2026-09-26','2026-10-10'];
+const BLACKOUT_DATES = ['2026-10-20','2026-10-21'];
+const LEAVE_DATES_AUG = ['2026-08-20','2026-08-21','2026-08-22','2026-08-24','2026-08-25','2026-08-26','2026-08-27','2026-08-29','2026-08-31'];
+
+const TYPE_META = {
+  school:   {label:'School day',        color:'var(--c-school)'},
+  leave:    {label:'Full-schedule day', color:'var(--c-leave)'},
+  sunday:   {label:'Sunday — exam day', color:'var(--c-sunday)'},
+  rest:     {label:'Full rest day',     color:'var(--c-rest)'},
+  blackout: {label:'Blackout — no study',color:'var(--c-blackout)'}
+};
+
+const TRACK_META = {
+  physics: {label:'Physics / IPhO', color:'var(--c-physics)'},
+  ai:      {label:'AI Olympiad',    color:'var(--c-ai)'},
+  ioi:     {label:'IOI',            color:'var(--c-ioi)'},
+  jee:     {label:'JEE Chem+Math',  color:'var(--c-jee)'},
+  mixed:   {label:'Cross-track',    color:'var(--c-mixed)'},
+  sleep:   {label:'Sleep',          color:'var(--text-faint)'},
+  exercise:{label:'Exercise',       color:'var(--text-faint)'}
+};
+
+function buildSchedule(){
+  const arr = [];
+  const startD = new Date(Date.UTC(2026,7,15));
+  const endD = new Date(Date.UTC(2026,9,23));
+  let dayNum = 1;
+  for(let d = new Date(startD); d <= endD; d.setUTCDate(d.getUTCDate()+1)){
+    const iso = d.toISOString().slice(0,10);
+    const weekday = d.getUTCDay(); // 0 Sun .. 6 Sat
+    let type;
+    if(BLACKOUT_DATES.includes(iso)) type = 'blackout';
+    else if(REST_DATES.includes(iso)) type = 'rest';
+    else if(weekday === 0) type = 'sunday';
+    else if(LEAVE_DATES_AUG.includes(iso)) type = 'leave';
+    else type = 'school';
+
+    arr.push({
+      date: iso,
+      day: dayNum,
+      week: Math.ceil(dayNum/7),
+      weekday: weekday,
+      type: type
+    });
+    dayNum++;
+  }
+  return arr;
+}
+const SCHEDULE = buildSchedule();
+
+const WEEKS = [
+  {week:1, dates:'Aug 15 – 21', physics:'Units & Measurements → Motion in a Straight Line', ai:'Python / NumPy / Pandas fundamentals begin', ioi:'C++ basics — Cherno series (syntax, if/for/while, pointers, references)', notes:'Onboarding sprint — no rest day this week, on purpose.'},
+  {week:2, dates:'Aug 22 – 28', physics:'Motion in a Plane → Laws of Motion', ai:'NumPy / Pandas continued + Matplotlib / Seaborn', ioi:'C++ classes, structs, strings, vectors + STL containers', notes:'Full rest day: Aug 28.'},
+  {week:3, dates:'Aug 29 – Sep 4', physics:'Work, Energy & Power → Rotational Motion (start)', ai:'Foundational math — probability, stats, linear algebra, optimization', ioi:'Read CPH ch.1–2, start CSES Introductory Problems', notes:''},
+  {week:4, dates:'Sep 5 – 11', physics:'Rotational Motion (finish) → Gravitation', ai:'Supervised learning — Linear/Logistic Regression, KNN, Decision Trees', ioi:'Finish Introductory Problems → start Sorting & Searching', notes:''},
+  {week:5, dates:'Sep 12 – 18', physics:'Mechanical Properties of Solids → Fluids', ai:'Unsupervised learning — K-Means, PCA, Hierarchical + Naive Bayes, PageRank, TF-IDF', ioi:'Sorting & Searching → Dynamic Programming (start)', notes:'Full rest day: Sep 12.'},
+  {week:6, dates:'Sep 19 – 25', physics:'Thermal Properties → Thermodynamics → KTG', ai:'Neural network fundamentals — perceptron, backprop, activation/loss functions, MLP', ioi:'Dynamic Programming continued — full week, meaty topic', notes:'Day 40 = Sep 23 → buy Irodov + Krotov now.'},
+  {week:7, dates:'Sep 26 – Oct 2', physics:'Oscillations & Waves', ai:'Computer vision — CNNs, image classification, detection/segmentation basics', ioi:'Graph Algorithms, part 1', notes:'Full rest day: Sep 26.'},
+  {week:8, dates:'Oct 3 – 9', physics:'Electrostatics', ai:'CV continued (ViT, CLIP basics) → start NLP — embeddings, attention, Transformers', ioi:'Graph Algorithms part 2 → Range Queries', notes:'Start banking buffer time for the Oct 20–21 blackout.'},
+  {week:9, dates:'Oct 10 – 16', physics:'Magnetism / EMI / AC', ai:'NLP continued — pretrained encoders, LLM basics, PEFT/LoRA', ioi:'Tree Algorithms', notes:'Full rest day: Oct 10. Keep banking buffer.'},
+  {week:10, dates:'Oct 17 – 23', physics:'Optics → Dual Nature → Atoms & Nuclei → Electronic Devices (compressed)', ai:'Gen-AI tool use (prompt engineering) + mock stage-1/2 practice', ioi:'Geometry (partial) + Advanced Techniques/Graphs (partial) + mixed CSES review', notes:'Blackout Oct 20–21 absorbs this week\u2019s rest. Let content spill past Oct 23 if the blackout costs pace.'}
+];
+
+// time helpers: minutes from midnight
+function hm(h,m){ return h*60+m; }
+
+function trackBForWeekday(weekday){
+  // 0 Sun .. 6 Sat.  Mon/Wed/Fri -> IOI, Tue/Thu/Sat -> AI
+  return [1,3,5].includes(weekday) ? 'ioi' : 'ai';
+}
+
+function templateA(weekday){
+  const b = trackBForWeekday(weekday);
+  return [
+    {s:hm(3,30), e:hm(5,10), title:'New content — Physics / IPhO', track:'physics', tech:'New content'},
+    {s:hm(5,10), e:hm(5,30), title:'Flashcard creation', track:'physics', tech:'Flashcards'},
+    {s:hm(5,30), e:hm(6,0), title:'Active recall — 1-day spaced cards', track:'mixed', tech:'Active recall'},
+    {s:hm(15,0), e:hm(16,0), title:'Question workout — Physics', track:'physics', tech:'Question workout'},
+    {s:hm(21,0), e:hm(21,45), title:'New content — ' + TRACK_META[b].label, track:b, tech:'New content'},
+    {s:hm(21,45), e:hm(22,10), title:'Error log review', track:'mixed', tech:'Error log'},
+    {s:hm(22,10), e:hm(22,30), title:'Spaced-rep drill — 3/7/16-day cards', track:'mixed', tech:'Spaced repetition'}
+  ];
+}
+
+function templateB(weekday){
+  const b = trackBForWeekday(weekday);
+  return [
+    {s:hm(3,30), e:hm(5,0), title:'New content — Physics / IPhO', track:'physics', tech:'New content'},
+    {s:hm(5,0), e:hm(5,30), title:'Flashcards — Physics', track:'physics', tech:'Flashcards'},
+    {s:hm(5,30), e:hm(6,30), title:'Question workout — Physics (Irodov / HC Verma / PYQs)', track:'physics', tech:'Question workout'},
+    {s:hm(6,30), e:hm(7,30), title:'New content — ' + TRACK_META[b].label, track:b, tech:'New content'},
+    {s:hm(7,30), e:hm(8,0), title:'Flashcards — ' + TRACK_META[b].label, track:b, tech:'Flashcards'},
+    {s:hm(8,0), e:hm(8,30), title:'Active recall — 1-day spaced cards', track:'mixed', tech:'Active recall'},
+    {s:hm(8,30), e:hm(10,0), title:'Sleep', track:'sleep', tech:'Sleep block'},
+    {s:hm(10,0), e:hm(11,0), title:'Question workout — ' + TRACK_META[b].label, track:b, tech:'Question workout'},
+    {s:hm(11,0), e:hm(12,0), title:'JEE Chem + Math — PYQs on this week\u2019s coaching topic', track:'jee', tech:'PYQ + recall'},
+    {s:hm(12,0), e:hm(13,0), title:'Feynman technique — explain a concept from scratch, no notes', track:'mixed', tech:'Feynman technique'},
+    {s:hm(13,0), e:hm(13,45), title:'Error log review — all 4 tracks', track:'mixed', tech:'Error log'},
+    {s:hm(13,45), e:hm(14,30), title:'Spaced-rep drill — 3/7/16/35-day cards', track:'mixed', tech:'Spaced repetition'},
+    {s:hm(15,30), e:hm(16,30), title:'Long-horizon review — no-notes recall on a ~2-week-old topic', track:'mixed', tech:'Active recall'},
+    {s:hm(16,30), e:hm(18,30), title:'Exercise (badminton) — first thing to cut if behind', track:'exercise', tech:'Exercise'},
+    {s:hm(19,0), e:hm(20,0), title:'Question workout — interleaved across all 4 tracks', track:'mixed', tech:'Question workout'},
+    {s:hm(20,0), e:hm(20,45), title:'New content — buffer track (whichever is behind pace)', track:'mixed', tech:'New content'},
+    {s:hm(20,45), e:hm(21,15), title:'Flashcard creation — evening\u2019s work', track:'mixed', tech:'Flashcards'},
+    {s:hm(21,15), e:hm(21,45), title:'Error log entry — log today\u2019s mistakes (what / why / fix)', track:'mixed', tech:'Error log'},
+    {s:hm(21,45), e:hm(22,0), title:'Tomorrow\u2019s plan + due-card check', track:'mixed', tech:'Planning'}
+  ];
+}
+
+const TEMPLATE_SUNDAY = [
+  {title:'JEE PYQs — this week\u2019s topic', track:'jee', tech:'PYQ practice', dur:'~90 min'},
+  {title:'Olympiad PYQs — self-sourced (alternate Physics / IOI)', track:'mixed', tech:'PYQ practice', dur:'~90 min'},
+  {title:'Weekly spaced-rep mega-review — every 7-day card, all tracks', track:'mixed', tech:'Spaced repetition', dur:'~60 min'},
+  {title:'Error log consolidation — look for repeat mistake patterns', track:'mixed', tech:'Error log', dur:'~45 min'}
+];
+
+const RISKS = [
+  {tag:'Timing', body:'<strong>Video length vs. slot length.</strong> Playlist videos run 1.5–4 hrs; new-content slots are 60–100 min. If a video runs over, it continues in the next new-content slot — never compressed to fit the clock.'},
+  {tag:'Blackout', body:'<strong>Oct 20–21 compresses an already-light Week 10.</strong> Mitigated by banking buffer in the Week 8–9 evening catch-up slots, and by letting the last stretch of physics / CSES / IOAI content spill a few days past Oct 23.'},
+  {tag:'Fatigue', body:'<strong>13.5-hour leave days are brutal back-to-back.</strong> That\u2019s why 3 of the 2nd/4th Saturdays became full rest days instead of full-schedule days. If it\u2019s still too much, exercise is the first thing to cut — not sleep, not the spaced-rep blocks.'},
+  {tag:'Coverage gap', body:'<strong>JEE Chem/Math has no dedicated doc</strong>, so this plan only gives it PYQ + recall time, assuming new content comes from coaching. Worth checking against coaching\u2019s own December-track pace every couple of weeks.'},
+  {tag:'Discipline decay', body:'<strong>Flashcards and error logs are the first thing skipped when tired</strong> — but they\u2019re what makes "don\u2019t re-study everything" actually work. On a rough day, cut new content before cutting review.'}
+];
+
+/* ============ IST clock ============ */
+function getIST(){
+  const now = new Date();
+  const fmt = new Intl.DateTimeFormat('en-CA', {
+    timeZone:'Asia/Kolkata', year:'numeric', month:'2-digit', day:'2-digit',
+    hour:'2-digit', minute:'2-digit', hour12:false
+  });
+  const parts = {};
+  fmt.formatToParts(now).forEach(p => parts[p.type] = p.value);
+  return {
+    iso: `${parts.year}-${parts.month}-${parts.day}`,
+    minutes: parseInt(parts.hour,10)*60 + parseInt(parts.minute,10)
+  };
+}
+
+function findEntry(iso){
+  return SCHEDULE.find(e => e.date === iso) || null;
+}
+
+function fmtTime(mins){
+  let h = Math.floor(mins/60), m = mins%60;
+  const ap = h >= 12 ? 'PM' : 'AM';
+  let h12 = h % 12; if(h12===0) h12 = 12;
+  return `${h12}:${m.toString().padStart(2,'0')} ${ap}`;
+}
+
+function renderTrackChip(trackKey){
+  const t = TRACK_META[trackKey];
+  return `<span class="track-chip"><span class="sw" style="background:${t.color}"></span>${t.label}</span>`;
+}
+
+/* ============ Render: Today panel ============ */
+function renderToday(){
+  const el = document.getElementById('todayPanel');
+  const {iso, minutes} = getIST();
+  const entry = findEntry(iso);
+
+  if(!entry){
+    const before = iso < START;
+    el.innerHTML = `
+      <div class="day-readout">
+        <div class="label">${before ? 'Plan not started' : 'Plan complete'}</div>
+        <div class="big">${before ? '70' : '70'}<span class="of">/70 days</span></div>
+        <div class="date-line">${before ? 'Starts Aug 15, 2026' : 'Finished Oct 23, 2026 — nice work'}</div>
+      </div>`;
+    return;
+  }
+
+  const meta = TYPE_META[entry.type];
+  const weekdayName = new Date(entry.date+'T00:00:00Z').toLocaleDateString('en-US',{weekday:'long', timeZone:'UTC'});
+  const dateLabel = new Date(entry.date+'T00:00:00Z').toLocaleDateString('en-US',{month:'short', day:'numeric', timeZone:'UTC'});
+
+  let nowHtml = '';
+  if(entry.type === 'blackout'){
+    nowHtml = `<div class="now-empty">No study today — full blackout day. Deliberate rest, use it fully.</div>`;
+  } else if(entry.type === 'rest'){
+    nowHtml = `<div class="now-empty">Full rest day. No fixed blocks, no flashcards, no drilling. Sleep in.</div>`;
+  } else if(entry.type === 'sunday'){
+    nowHtml = `<div class="now-empty">Exam this morning (not tracked here). Once free, run through the 4 Sunday blocks in order — see the Daily Templates section.</div>`;
+  } else {
+    const blocks = entry.type === 'school' ? templateA(entry.weekday) : templateB(entry.weekday);
+    const current = blocks.find(b => minutes >= b.s && minutes < b.e);
+    const next = blocks.find(b => b.s > minutes);
+    if(current){
+      nowHtml = `
+        <div class="now-row">
+          <div class="rec-dot"></div>
+          <div>
+            <div class="now-label">Running now</div>
+            <div class="now-title">${current.title}</div>
+            <div class="now-meta">${fmtTime(current.s)} – ${fmtTime(current.e)} · ${renderTrackChip(current.track)}</div>
+          </div>
+        </div>`;
+    } else {
+      nowHtml = `<div class="now-empty">No fixed block right now — free time / school hours (not tracked).</div>`;
+    }
+    if(next){
+      nowHtml += `
+        <div class="now-row">
+          <div style="width:10px;"></div>
+          <div>
+            <div class="now-label">Up next</div>
+            <div class="now-title" style="font-size:1rem;">${next.title}</div>
+            <div class="now-meta">${fmtTime(next.s)} – ${fmtTime(next.e)} · ${renderTrackChip(next.track)}</div>
+          </div>
+        </div>`;
+    }
+  }
+
+  el.innerHTML = `
+    <div class="today-grid">
+      <div class="day-readout">
+        <div class="label">Day</div>
+        <div class="big">${entry.day}<span class="of">/70</span></div>
+        <div class="date-line">${weekdayName}, ${dateLabel} · Week ${entry.week}</div>
+        <div class="type-pill"><span class="dot" style="background:${meta.color}"></span>${meta.label}</div>
+      </div>
+      <div class="now-block">${nowHtml}</div>
+    </div>
+    <div class="progress-track"><div class="progress-fill" style="width:${(entry.day/70*100).toFixed(1)}%"></div></div>
+    <div class="progress-caption">DAY ${entry.day} OF 70 · ${(entry.day/70*100).toFixed(0)}% THROUGH THE WINDOW</div>
+  `;
+}
+
+/* ============ Render: legend ============ */
+function renderLegend(){
+  const el = document.getElementById('legend');
+  el.innerHTML = Object.keys(TRACK_META).filter(k => !['sleep','exercise'].includes(k))
+    .map(k => renderTrackChip(k)).join('');
+}
+
+/* ============ Render: templates ============ */
+function renderBlockRow(b, timeLabel){
+  const t = TRACK_META[b.track];
+  return `
+    <div class="block-row">
+      <div class="block-time">${timeLabel || (fmtTime(b.s)+' – '+fmtTime(b.e))}</div>
+      <div class="block-bar" style="background:${t.color}"></div>
+      <div>
+        <div class="block-title">${b.title}</div>
+        <div class="block-tags">
+          <span class="block-tag">${t.label}</span>
+          <span class="block-tag">${b.tech}</span>
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderTemplates(){
+  const tabsEl = document.getElementById('templateTabs');
+  const panelsEl = document.getElementById('templatePanels');
+
+  const tabs = [
+    {id:'school', label:'A · School day'},
+    {id:'leave', label:'B · Full-schedule day'},
+    {id:'sunday', label:'C · Sunday'}
+  ];
+  tabsEl.innerHTML = tabs.map((t,i) => `<button class="tt-btn ${i===0?'active':''}" data-tab="${t.id}">${t.label}</button>`).join('');
+
+  const schoolBlocks = templateA(1); // Monday example for display
+  const leaveBlocks = templateB(1);
+
+  panelsEl.innerHTML = `
+    <div class="template-panel active" data-panel="school">
+      <p class="template-note">~45 days · 4h total. Applies to normal school days. Evening Track B alternates: Mon/Wed/Fri → IOI, Tue/Thu/Sat → AI Olympiad.</p>
+      ${schoolBlocks.map(b => renderBlockRow(b)).join('')}
+    </div>
+    <div class="template-panel" data-panel="leave">
+      <p class="template-note">~9 content days · 13.5h total. Applies to leave days and the 2nd/4th-Saturday full-schedule days that weren't converted to rest.</p>
+      ${leaveBlocks.map(b => renderBlockRow(b)).join('')}
+    </div>
+    <div class="template-panel" data-panel="sunday">
+      <p class="template-note">10 Sundays. Morning is your coaching exam (not tracked). Times below are sequential, not fixed — shift the whole block to start whenever your exam actually ends.</p>
+      ${TEMPLATE_SUNDAY.map(b => renderBlockRow({title:b.title, track:b.track, tech:b.tech}, b.dur)).join('')}
+    </div>
+  `;
+
+  tabsEl.querySelectorAll('.tt-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      tabsEl.querySelectorAll('.tt-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      panelsEl.querySelectorAll('.template-panel').forEach(p => p.classList.remove('active'));
+      panelsEl.querySelector(`[data-panel="${btn.dataset.tab}"]`).classList.add('active');
+    });
+  });
+}
+
+/* ============ Render: week map ============ */
+function renderWeeks(){
+  const el = document.getElementById('weekGrid');
+  const todayEntry = findEntry(getIST().iso);
+  const currentWeek = todayEntry ? todayEntry.week : null;
+
+  el.innerHTML = WEEKS.map(w => {
+    const days = SCHEDULE.filter(e => e.week === w.week);
+    const strip = days.map(d => {
+      const meta = TYPE_META[d.type];
+      const label = new Date(d.date+'T00:00:00Z').toLocaleDateString('en-US',{month:'short', day:'numeric', weekday:'short', timeZone:'UTC'});
+      return `<div class="day-sq" style="background:${meta.color}" title="${label} — ${meta.label}"></div>`;
+    }).join('');
+
+    return `
+      <div class="week-card ${w.week === currentWeek ? 'current-week' : ''}" data-week="${w.week}">
+        <div class="week-card-head">
+          <div>
+            <div class="week-num">WEEK ${w.week}${w.week === currentWeek ? ' · CURRENT' : ''}</div>
+            <div class="week-dates">${w.dates}</div>
+          </div>
+          <div class="week-toggle">+</div>
+        </div>
+        <div class="day-strip">${strip}</div>
+        <div class="week-headline">${w.physics}</div>
+        <div class="week-body">
+          <div class="track-row"><div class="sw" style="background:var(--c-physics)"></div><div><div class="tname">Physics / IPhO</div><div class="tval">${w.physics}</div></div></div>
+          <div class="track-row"><div class="sw" style="background:var(--c-ai)"></div><div><div class="tname">AI Olympiad</div><div class="tval">${w.ai}</div></div></div>
+          <div class="track-row"><div class="sw" style="background:var(--c-ioi)"></div><div><div class="tname">IOI</div><div class="tval">${w.ioi}</div></div></div>
+          ${w.notes ? `<div class="week-note">${w.notes}</div>` : ''}
+        </div>
+      </div>`;
+  }).join('');
+
+  el.querySelectorAll('.week-card').forEach(card => {
+    card.addEventListener('click', () => card.classList.toggle('open'));
+  });
+}
+
+/* ============ Render: risks ============ */
+function renderRisks(){
+  document.getElementById('riskList').innerHTML = RISKS.map(r => `
+    <div class="risk-item">
+      <div class="risk-tag">${r.tag}</div>
+      <div class="risk-body">${r.body}</div>
+    </div>`).join('');
+}
+
+/* ============ Nav active state ============ */
+function setupNav(){
+  const links = document.querySelectorAll('.segnav a');
+  const sections = Array.from(links).map(l => document.querySelector(l.getAttribute('href')));
+  function onScroll(){
+    let idx = 0;
+    sections.forEach((s,i) => { if(s && s.getBoundingClientRect().top < 120) idx = i; });
+    links.forEach(l => l.classList.remove('active'));
+    links[idx] && links[idx].classList.add('active');
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  onScroll();
+}
+
+/* ============ Init ============ */
+function init(){
+  renderToday();
+  renderLegend();
+  renderTemplates();
+  renderWeeks();
+  renderRisks();
+  setupNav();
+  setInterval(renderToday, 30000);
+}
+init();
+</script>
+</body>
+</html>
